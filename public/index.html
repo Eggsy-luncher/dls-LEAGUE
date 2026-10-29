@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10140f">
+  <meta name="description" content="Independent DLS 26 community tournaments, match schedules, screenshot-verified results, and league tables.">
+  <title>DLS 26 Arena</title>
+  <link rel="stylesheet" href="/app.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+  <div id="toast" class="toast" role="status"></div>
+  <main id="authView" class="auth-view">
+    <a class="brand auth-brand" href="/"><span class="brand-mark">D</span><span>DLS<span class="brand-light">26</span><small>ARENA</small></span></a>
+    <section class="auth-card">
+      <div class="eyebrow"><span class="live-dot"></span> YOUR COMMUNITY CUP STARTS HERE</div>
+      <h1 id="authHeading">Your club.<br><em>Your moment.</em></h1>
+      <p id="authIntro">Sign in to see your tournament fixtures, match deadlines and place a friendly points prediction.</p>
+      <form id="authForm" class="stack">
+        <label id="displayNameField" class="hidden">Display name<input id="displayName" autocomplete="name" maxlength="42"></label>
+        <label id="gamerTagField" class="hidden">DLS in-game name<input id="gamerTag" autocomplete="nickname" minlength="2" maxlength="32"></label>
+        <label>Email address<input id="email" type="email" autocomplete="email" required></label>
+        <label>Password<input id="password" type="password" autocomplete="current-password" minlength="10" required></label>
+        <button id="authSubmit" class="button button-primary" type="submit">Sign in <span>↗</span></button>
+      </form>
+      <button id="completeVerification" class="button button-primary hidden" type="button">Verify email address</button>
+      <button id="resendVerification" class="text-button hidden" type="button">Resend verification email</button>
+      <button id="authToggle" class="text-button" type="button">New here? Create an Arena account</button>
+      <p class="fine-print">This is an independent tournament site with separate accounts. Arena points are free, virtual points; no cash stakes.</p>
+    </section>
+  </main>
+
+  <div id="appView" class="app-shell hidden">
+    <aside class="sidebar">
+      <a class="brand" href="/"><span class="brand-mark">D</span><span>DLS<span class="brand-light">26</span><small>ARENA</small></span></a>
+      <div class="season-label"><span class="live-dot"></span> MATCHDAY CENTRAL</div>
+      <nav class="main-nav" aria-label="Main navigation">
+        <button class="nav-link active" data-view="overview"><span class="nav-icon">◫</span> Overview</button>
+        <button class="nav-link" data-view="fixtures"><span class="nav-icon">⌗</span> My fixtures <span id="fixtureNavCount" class="nav-count">0</span></button>
+        <button class="nav-link" data-view="table"><span class="nav-icon">☷</span> Leaderboard</button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="points-card"><span class="points-icon">✳</span><div><small>FREE ARENA POINTS</small><strong id="walletBalance">1,000</strong></div><span class="points-label">PTS</span></div>
+      <div class="user-card"><div class="avatar" id="userAvatar">?</div><div class="user-copy"><strong id="userGamerTag">Player</strong><small id="userEmail"></small></div><button id="signOut" class="signout" type="button" aria-label="Sign out">↗</button></div>
+      <p class="sidebar-note">Standalone community project.<br>Not affiliated with First Touch Games.</p>
+    </aside>
+
+    <section class="main-column">
+      <header class="topbar">
+        <div class="breadcrumb"><span>DLS 26</span><b>/</b><strong id="pageLabel">Overview</strong></div>
+        <div class="topbar-right">
+          <label class="tournament-select"><span>TOURNAMENT</span><select id="tournamentSelect" aria-label="Select tournament"></select></label>
+          <button id="reminderButton" class="button button-outline" type="button">Enable reminders</button>
+        </div>
+      </header>
+      <main class="content">
+        <section class="hero">
+          <div class="hero-copy">
+            <div class="eyebrow"><span class="live-dot"></span> THE DLS COMMUNITY CUP</div>
+            <h1>Play your match.<br><em>Own your place.</em></h1>
+            <p id="heroSubtitle">Know your kick-off. Play in the time window. Upload a Live Tracker result for the organizer to verify.</p>
+            <div class="hero-actions"><button class="button button-primary" data-jump="fixtures">See my fixtures <span>↗</span></button><button class="button button-quiet" data-jump="table">View the table <span>↓</span></button></div>
+            <div class="hero-meta"><span class="live-dot"></span><span id="heroStatus">Waiting for tournament fixtures</span></div>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="orbit orbit-outer"></div><div class="orbit orbit-inner"></div>
+            <div class="pitch"><div class="pitch-half"></div><div class="pitch-circle"></div><div class="pitch-dot"></div></div>
+            <div class="football">⚽</div><div class="art-label">DREAM<br>BIG<span>.</span></div>
+          </div>
+        </section>
+        <div class="stats-grid">
+          <article class="stat-card"><span class="stat-icon">♙</span><div><small>PLAYERS IN CUP</small><strong id="statPlayers">0</strong></div></article>
+          <article class="stat-card"><span class="stat-icon">⌗</span><div><small>COMPLETED FIXTURES</small><strong id="statPlayed">0 <i>/ 0</i></strong></div></article>
+          <article class="stat-card"><span class="stat-icon">♛</span><div><small>TABLE LEADER</small><strong id="statLeader">—</strong></div></article>
+          <article class="stat-card"><span class="stat-icon">◷</span><div><small>NEXT KICK-OFF</small><strong id="statNext">—</strong></div></article>
+        </div>
+        <section id="tournamentCompletion" class="panel hidden" aria-live="polite"></section>
+
+        <section id="organizerPanel" class="organizer-panel hidden">
+          <div class="section-heading organizer-heading"><div><div class="eyebrow">MATCHDAY CONTROL</div><h2>Organizer desk</h2><p>Set fixtures and deadlines, then check Live Tracker screenshots in result review.</p></div><span class="admin-badge">ADMIN ACCESS</span></div>
+          <div class="admin-grid">
+            <form id="tournamentForm" class="admin-form">
+              <strong>New league</strong>
+              <label>League name<input name="name" required minlength="3" maxlength="60" placeholder="e.g. Community Cup"></label>
+              <label>Format<select name="format" required><option value="single_round_robin">Single round-robin</option><option value="double_round_robin">Double round-robin</option><option value="knockout">Single-elimination knockout</option><option value="groups_knockout">Groups + knockout</option></select></label>
+              <label>Starts at · local time<input name="startsAt" type="datetime-local"></label>
+              <label>League ends at · local time<input name="endsAt" type="datetime-local" required></label>
+              <label>Champion points<input name="rewardPoints" type="number" min="0" max="1000000" value="100" required></label>
+              <label>Manual prize description · optional<input name="prizeDescription" maxlength="120" placeholder="e.g. Winner's trophy"></label>
+              <button class="button button-primary" type="submit">Create league <span>＋</span></button>
+            </form>
+            <form id="playerForm" class="admin-form"><strong>Add player</strong><label>Account email or DLS name<input name="identity" required placeholder="Search registered players"></label><label id="groupField" class="hidden">Player group<select name="groupKey"><option value="">Choose group</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></label><button class="button button-outline" type="submit">Add to league <span>＋</span></button></form>
+            <form id="fixtureForm" class="admin-form"><strong>Schedule a fixture</strong><div class="field-pair"><label>Home<select name="homeUserId" required></select></label><label>Away<select name="awayUserId" required></select></label></div><label id="stageField">Stage<select name="stage"><option value="league">League</option><option value="group">Group stage</option><option value="knockout">Knockout</option></select></label><label id="roundField">Knockout round<input name="roundNumber" type="number" min="1" max="16" value="1" required></label><label>Kick-off · local time<input name="scheduledAt" type="datetime-local" required></label><label>Play-by deadline · local time<input name="deadlineAt" type="datetime-local" required></label><button class="button button-outline" type="submit">Publish fixture <span>＋</span></button></form>
+          </div>
+        </section>
+
+        <div class="section-heading section-heading-main"><div><div class="eyebrow">BE READY FOR KICK-OFF</div><h2 id="sectionTitle">My matchday</h2></div><span id="matchSummary" class="muted-label">All times shown in your local timezone</span></div>
+        <div class="dashboard-grid">
+          <section id="fixtureSection" class="panel fixtures-panel"><div class="panel-heading"><div><span class="panel-kicker">YOUR SCHEDULE</span><h3>Fixtures & results</h3></div><span id="timezoneLabel" class="table-season"></span></div><div id="matchList" class="match-list"></div></section>
+          <section id="tableSection" class="panel table-panel"><div class="panel-heading"><div><span class="panel-kicker">CHASE THE CROWN</span><h3>League table</h3></div><span class="table-season">2026</span></div><div class="table-wrap"><table><thead><tr><th>#</th><th>PLAYER</th><th>P</th><th>GD</th><th>PTS</th></tr></thead><tbody id="leaderboardBody"></tbody></table></div></section>
+        </div>
+        <section class="panel submission-panel"><div class="panel-heading"><div><span class="panel-kicker">LIVE TRACKER PROOF</span><h3>Result review</h3></div><span id="reviewLabel" class="table-season">0 pending</span></div><div id="submissionList" class="submission-list"></div></section>
+        <footer class="footer"><span>PLAY THE GAME. RESPECT THE RESULT.</span><span>Screenshot submissions are reviewed by the organizer. Points are virtual; no cash or withdrawals.</span></footer>
+      </main>
+    </section>
+  </div>
+</body>
+</html>
