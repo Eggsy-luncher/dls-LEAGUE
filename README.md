@@ -49,6 +49,8 @@ Prediction points are virtual and free. Each account starts with 1,000 non-trans
 
 Vercel runs the Express app as a Node.js serverless function. Production startup requires PostgreSQL (`DATABASE_URL`) and private S3-compatible object storage. Local development continues to use SQLite and local uploads when those production variables are absent.
 
+Vercel sets `VERCEL=1`; the app uses that to enforce production storage even if `NODE_ENV` is not present. It never falls back to SQLite or filesystem uploads in a Vercel function.
+
 ### Provision services
 
 1. Create a PostgreSQL database with a pooled connection string (Neon is supported). Use the provider's SSL connection URL as `DATABASE_URL`.

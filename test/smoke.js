@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const net = require('node:net');
 const os = require('node:os');
 const path = require('node:path');
-const { spawn } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
 
 const port = 32300 + Math.floor(Math.random() * 300);
 const dataDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'dls26-test-'));
@@ -127,6 +127,48 @@ async function createLeague(cookie, name, format, endsAt = new Date(Date.now() +
   return result.data.tournamentId;
 }
 
+function assertVercelRequiresProductionServices() {
+  const probeDirectory = path.join(dataDirectory, 'vercel-probe');
+  const env = {
+    ...process.env,
+    NODE_ENV: 'development',
+    VERCEL: '1',
+    DATABASE_URL: '',
+    DATA_DIR: probeDirectory,
+    S3_ENDPOINT: '',
+    S3_BUCKET: '',
+    S3_ACCESS_KEY_ID: '',
+    S3_SECRET_ACCESS_KEY: ''
+  };
+  const databaseProbe = spawnSync(process.execPath, ['-e', `
+    require('./db').initialize().then(
+      () => { console.error('Expected DATABASE_URL to be required.'); process.exitCode = 1; },
+      error => {
+        if (!/DATABASE_URL is required in production/.test(error.message)) {
+          console.error(error);
+          process.exitCode = 2;
+        }
+      }
+    );
+  `], { cwd: path.join(__dirname, '..'), env, encoding: 'utf8' });
+  assert.equal(databaseProbe.status, 0, databaseProbe.stderr || databaseProbe.stdout);
+
+  const storageProbe = spawnSync(process.execPath, ['-e', `
+    Promise.resolve().then(() => require('./storage').initialize()).then(
+      () => { console.error('Expected object storage to be required.'); process.exitCode = 1; },
+      error => {
+        if (!/private S3-compatible object storage/.test(error.message)) {
+          console.error(error);
+          process.exitCode = 2;
+        }
+      }
+    );
+  `], { cwd: path.join(__dirname, '..'), env, encoding: 'utf8' });
+  assert.equal(storageProbe.status, 0, storageProbe.stderr || storageProbe.stdout);
+  assert.equal(fs.existsSync(path.join(probeDirectory, 'uploads')), false);
+  console.log('PASS Vercel mode requires Postgres and private object storage');
+}
+
 async function addPlayer(cookie, tournamentId, identity, groupKey = '') {
   return request(`/api/tournaments/${tournamentId}/players`, {
     method: 'POST',
@@ -138,6 +180,7 @@ async function addPlayer(cookie, tournamentId, identity, groupKey = '') {
 
 (async () => {
   try {
+    assertVercelRequiresProductionServices();
     await new Promise(resolve => smtpServer.listen(0, '127.0.0.1', resolve));
     const smtpPort = smtpServer.address().port;
     server = spawn(process.execPath, ['server.js'], {

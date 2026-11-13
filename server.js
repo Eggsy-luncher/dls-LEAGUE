@@ -14,7 +14,7 @@ const storage = require('./storage');
 const PORT = Number(process.env.PORT || 3000);
 const JWT_SECRET = process.env.JWT_SECRET || 'development-only-change-this-before-production';
 const ADMIN_EMAIL = String(process.env.DLS_ADMIN_EMAIL || 'ossommordecai@gmail.com').trim().toLowerCase();
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
 const SMTP_HOST = String(process.env.SMTP_HOST || '').trim();
 const SMTP_PORT = Number(process.env.SMTP_PORT || 587);
 const SMTP_SECURE = String(process.env.SMTP_SECURE || '').toLowerCase() === 'true';

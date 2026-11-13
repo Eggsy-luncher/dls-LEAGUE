@@ -2,7 +2,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
-const isProduction = process.env.NODE_ENV === 'production';
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
 const uploadDirectory = path.resolve(process.env.DATA_DIR || path.join(__dirname, 'data'), 'uploads');
 const s3Config = {
   endpoint: process.env.S3_ENDPOINT,

@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { AsyncLocalStorage } = require('node:async_hooks');
 
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
 const isPostgres = Boolean(process.env.DATABASE_URL);
 const transactionContext = new AsyncLocalStorage();
 let sqlite;
@@ -78,7 +79,7 @@ function transaction(callback) {
 }
 
 async function initialize() {
-  if (process.env.NODE_ENV === 'production' && !isPostgres) {
+  if (isProduction && !isPostgres) {
     throw new Error('DATABASE_URL is required in production; SQLite is supported only for local development.');
   }
   if (isPostgres) {
