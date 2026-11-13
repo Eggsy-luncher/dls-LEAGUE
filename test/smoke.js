@@ -7,6 +7,7 @@ const { spawn, spawnSync } = require('node:child_process');
 
 const port = 32300 + Math.floor(Math.random() * 300);
 const dataDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'dls26-test-'));
+const vercelConfig = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'vercel.json'), 'utf8'));
 let server;
 let serverOutput = '';
 const sentEmails = [];
@@ -46,6 +47,7 @@ const screenshotBytes = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/AAAAAElFTkSuQmCC',
   'base64'
 );
+assert.equal(vercelConfig.version, undefined, 'Vercel configuration must not use the legacy version field.');
 
 async function request(route, { method = 'GET', cookie, body, headers = {} } = {}) {
   const response = await fetch(baseUrl + route, {
