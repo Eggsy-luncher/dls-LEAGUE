@@ -1,6 +1,6 @@
 # DLS 26 Arena
 
-Independent DLS 26 tournaments, player accounts, scheduled match fixtures, result submissions, and standings. This app has its own server, SQLite database, user accounts, and sign-in; it does not depend on Orbit Community.
+Independent DLS 26 tournaments, player accounts, scheduled match fixtures, result submissions, and standings. Local development uses SQLite; production uses PostgreSQL and private S3-compatible object storage. The app has its own user accounts and sign-in and does not depend on Orbit Community.
 
 ## Run locally
 
@@ -45,8 +45,35 @@ Automatic results without screenshot submission and organizer approval require a
 
 Prediction points are virtual and free. Each account starts with 1,000 non-transferable points. Points have no cash value and cannot be purchased, withdrawn, or exchanged. Correct predictions receive their stake plus a proportional share of other predictions on the same match; a draw refunds stakes. Only submit predictions when they are available before a fixture begins.
 
-## Deploy
+## Production deployment on Vercel
 
-Set `NODE_ENV=production`, `JWT_SECRET`, `DLS_ADMIN_EMAIL`, SMTP settings, `PUBLIC_URL` (HTTPS), and `DATA_DIR` to a persistent server volume. Serve the site over HTTPS. Back up `data/dls26.db` and `data/uploads/`.
+Vercel runs the Express app as a Node.js serverless function. Production startup requires PostgreSQL (`DATABASE_URL`) and private S3-compatible object storage. Local development continues to use SQLite and local uploads when those production variables are absent.
+
+### Provision services
+
+1. Create a PostgreSQL database with a pooled connection string (Neon is supported). Use the provider's SSL connection URL as `DATABASE_URL`.
+2. Create a **private** S3-compatible bucket (Cloudflare R2 is supported). Create a scoped access key that can list/read/write/delete only this bucket.
+3. Configure an SMTP provider for verification email.
+4. Import this repository into Vercel and add the environment variables from `.env.production.example` to the Vercel project. Set `PUBLIC_URL` to the final HTTPS origin and `DLS_ADMIN_EMAIL` to the organizer's mailbox.
+5. Deploy. The database schema is created automatically at cold start. Keep Vercel's Node.js version on 22.
+
+Required Vercel variables:
+
+- `NODE_ENV=production`
+- `JWT_SECRET` (unique, high-entropy secret)
+- `DLS_ADMIN_EMAIL`
+- `PUBLIC_URL` (HTTPS)
+- `DATABASE_URL` (pooled PostgreSQL URL with SSL)
+- `PG_POOL_MAX=1` (recommended for serverless connection limits)
+- `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
+- `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, and paired `SMTP_USER`/`SMTP_PASS` when required
+
+Screenshots are uploaded to the private bucket and served only through the authenticated app route; do not make the bucket public or enable public object URLs. Database and bucket credentials belong in the Vercel project settings, never in the repository.
+
+To transfer an existing local SQLite installation, first stop writes to the old site, then set the destination PostgreSQL and S3 variables locally and run `npm run migrate:sqlite`. By default the script reads `./data/dls26.db` and `./data/uploads`; override these with `SQLITE_SOURCE` and `SQLITE_DATA_DIR`. It upgrades the legacy SQLite schema as needed, refuses to write into a non-empty PostgreSQL database, and removes uploaded objects if the database transaction fails. Keep a backup of the SQLite database and uploads until the new deployment has been verified.
+
+### Docker / persistent Node host
+
+The same PostgreSQL and private object-storage environment variables are required when running in production mode. For local development, leave `NODE_ENV=development` and `DATABASE_URL` unset to use SQLite and local files. The Docker files remain available for hosts that support containers.
 
 The site is not affiliated with or endorsed by First Touch Games.

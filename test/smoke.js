@@ -145,7 +145,13 @@ async function addPlayer(cookie, tournamentId, identity, groupKey = '') {
       env: {
         ...process.env,
         PORT: String(port),
+        NODE_ENV: 'test',
+        DATABASE_URL: '',
         DATA_DIR: dataDirectory,
+        S3_ENDPOINT: '',
+        S3_BUCKET: '',
+        S3_ACCESS_KEY_ID: '',
+        S3_SECRET_ACCESS_KEY: '',
         JWT_SECRET: 'standalone-test-secret-0123456789-abcdefghijklmnopqrst',
         DLS_ADMIN_EMAIL: 'admin@arena.test',
         SMTP_HOST: '127.0.0.1',

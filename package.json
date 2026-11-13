@@ -10,17 +10,22 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "check": "node --check server.js && node --check public/app.js",
+    "check": "node --check server.js && node --check db.js && node --check storage.js && node --check scripts/migrate-sqlite.js && node --check public/app.js",
+    "migrate:sqlite": "node scripts/migrate-sqlite.js",
     "test": "node test/smoke.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1168.0",
     "bcryptjs": "^3.0.2",
-    "better-sqlite3": "^11.8.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.4.0",
-    "nodemailer": "^10.3.1"
+    "nodemailer": "^10.3.1",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "better-sqlite3": "^13.1.1"
   }
 }

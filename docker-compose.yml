@@ -1,0 +1,22 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dls26-arena
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATA_DIR: /app/data
+    ports:
+      - "3000:3000"
+    volumes:
+      - dls26-data:/app/data
+
+volumes:
+  dls26-data:
