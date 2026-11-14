@@ -68,9 +68,10 @@ Required Vercel variables:
 - `DATABASE_URL` (pooled PostgreSQL URL with SSL)
 - `PG_POOL_MAX=1` (recommended for serverless connection limits)
 - `S3_ENDPOINT`, `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
+- Supabase Storage's S3 endpoint automatically uses path-style requests; `S3_FORCE_PATH_STYLE` can override this.
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_FROM`, and paired `SMTP_USER`/`SMTP_PASS` when required
 
-Screenshots are uploaded to the private bucket and served only through the authenticated app route; do not make the bucket public or enable public object URLs. Database and bucket credentials belong in the Vercel project settings, never in the repository.
+Screenshots are uploaded to the private bucket and served only through the authenticated app route; do not make the bucket public or enable public object URLs. On Vercel, screenshots larger than 3.75 MiB are re-encoded and compressed in the browser, with downscaling as needed, to stay below the function request-body limit. Database and bucket credentials belong in the Vercel project settings, never in the repository.
 
 To transfer an existing local SQLite installation, first stop writes to the old site, then set the destination PostgreSQL and S3 variables locally and run `npm run migrate:sqlite`. By default the script reads `./data/dls26.db` and `./data/uploads`; override these with `SQLITE_SOURCE` and `SQLITE_DATA_DIR`. It upgrades the legacy SQLite schema as needed, refuses to write into a non-empty PostgreSQL database, and removes uploaded objects if the database transaction fails. Keep a backup of the SQLite database and uploads until the new deployment has been verified.
 

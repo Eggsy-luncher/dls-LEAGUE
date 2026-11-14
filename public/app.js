@@ -1,17 +1,63 @@
 (() => {
   const $ = (selector, root = document) => root.querySelector(selector);
   const state = { user: null, data: null, tournamentId: null, emailConfigured: false, verificationToken: '', authMode: 'login', view: 'overview', toastTimer: null, refreshInProgress: false };
+  const screenshotUploadTarget = 3.75 * 1024 * 1024;
 
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>"']/g, character => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     })[character]);
   }
+  async function prepareScreenshot(file) {
+    if (file.size <= screenshotUploadTarget) return { file, compressed: false };
+    if (typeof createImageBitmap !== 'function') {
+      throw new Error('This screenshot is too large. Please use an image under 4 MB.');
+    }
+
+    let bitmap;
+    try { bitmap = await createImageBitmap(file); }
+    catch { throw new Error('Could not read this screenshot. Use a JPEG, PNG, or WebP image.'); }
+
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    if (!context) {
+      bitmap.close();
+      throw new Error('Could not process this screenshot. Please try a smaller image.');
+    }
+    try {
+      let scale = Math.min(1, 2560 / Math.max(bitmap.width, bitmap.height));
+      for (let resizeAttempt = 0; resizeAttempt < 4; resizeAttempt++) {
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        for (const quality of [0.9, 0.82, 0.74, 0.66]) {
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+          if (!blob) throw new Error('Could not compress this screenshot. Please try a smaller image.');
+          if (blob.size <= screenshotUploadTarget) {
+            const name = file.name.replace(/\.[^.]+$/, '') || 'live-tracker';
+            return {
+              file: new File([blob], `${name}.jpg`, { type: 'image/jpeg', lastModified: file.lastModified }),
+              compressed: true
+            };
+          }
+        }
+        scale *= 0.85;
+      }
+    } finally {
+      bitmap.close();
+      canvas.width = 0;
+      canvas.height = 0;
+    }
+    throw new Error('Could not reduce this screenshot enough for upload. Please crop it or use a smaller image.');
+  }
   async function api(url, options = {}) {
     const headers = { ...(options.body && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}), ...(options.headers || {}) };
     const response = await fetch(url, { ...options, headers, credentials: 'same-origin' });
     const result = response.status === 204 ? {} : await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(result.error || 'Something went wrong. Please try again.');
+    if (!response.ok) {
+      const message = response.status === 413 ? 'Screenshot is too large for upload. Please try a smaller image.' : 'Something went wrong. Please try again.';
+      throw new Error(result.error || message);
+    }
     return result;
   }
   function toast(message, error = false) {
@@ -447,9 +493,13 @@
     try {
       if (form.matches('[data-submit-result]')) {
         const body = new FormData(form);
+        const screenshot = await prepareScreenshot(form.elements.screenshot.files[0]);
+        body.set('screenshot', screenshot.file, screenshot.file.name);
         await api(`/api/matches/${form.dataset.submitResult}/submit`, { method: 'POST', body });
         await refresh();
-        toast('Tracker screenshot submitted. Standings update after organizer review.');
+        toast(screenshot.compressed
+          ? 'Screenshot compressed and submitted. Standings update after organizer review.'
+          : 'Tracker screenshot submitted. Standings update after organizer review.');
       } else if (form.matches('[data-prediction]')) {
         await api(`/api/matches/${form.dataset.prediction}/predictions`, { method: 'POST', body: JSON.stringify({
           pickedUserId: Number(form.elements.pickedUserId.value), stake: Number(form.elements.stake.value)

@@ -16,6 +16,13 @@ const configuredS3 = requiredS3Settings.every(Boolean);
 const partiallyConfiguredS3 = requiredS3Settings.some(Boolean) && !configuredS3;
 let s3;
 
+function forcePathStyle() {
+  if (process.env.S3_FORCE_PATH_STYLE) return process.env.S3_FORCE_PATH_STYLE.toLowerCase() === 'true';
+  const endpoint = new URL(s3Config.endpoint);
+  return endpoint.hostname.endsWith('.storage.supabase.co') ||
+    (endpoint.hostname.endsWith('.supabase.co') && endpoint.pathname.endsWith('/storage/v1/s3'));
+}
+
 function initialize() {
   if (partiallyConfiguredS3) throw new Error('Configure S3_ENDPOINT, S3_BUCKET, S3_REGION, S3_ACCESS_KEY_ID, and S3_SECRET_ACCESS_KEY together.');
   if (isProduction && !configuredS3) throw new Error('Configure private S3-compatible object storage before running in production.');
@@ -24,7 +31,7 @@ function initialize() {
     s3 = new S3Client({
       endpoint: s3Config.endpoint,
       region: s3Config.region,
-      forcePathStyle: Boolean(process.env.S3_FORCE_PATH_STYLE === 'true'),
+      forcePathStyle: forcePathStyle(),
       credentials: {
         accessKeyId: s3Config.accessKeyId,
         secretAccessKey: s3Config.secretAccessKey
